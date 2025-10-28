@@ -10,6 +10,9 @@ import { RegisterComponent } from './components/register/register.component';
 import { ChatRoomComponent } from './components/chat-room/chat-room.component';
 import { MessageComponent } from './components/message/message.component';
 import { UserListComponent } from './components/user-list/user-list.component';
+import { GroupCreateComponent } from './components/group-create/group-create.component';
+import { GroupListComponent } from './components/group-list/group-list.component';
+import { GroupChatComponent } from './components/group-chat/group-chat.component';
 
 @NgModule({
   declarations: [
@@ -18,7 +21,10 @@ import { UserListComponent } from './components/user-list/user-list.component';
     RegisterComponent,
     ChatRoomComponent,
     MessageComponent,
-    UserListComponent
+    UserListComponent,
+    GroupCreateComponent,
+    GroupListComponent,
+    GroupChatComponent
   ],
   imports: [
     BrowserModule,

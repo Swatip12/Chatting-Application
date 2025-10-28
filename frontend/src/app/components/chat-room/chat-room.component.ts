@@ -117,7 +117,7 @@ export class ChatRoomComponent implements OnInit, OnDestroy, AfterViewChecked {
 
   private loadGroups(): void {
     this.groupService.getUserGroups().subscribe({
-      next: (groups: Group[]) => {
+      next: (groups) => {
         this.groups = groups;
       },
       error: (error: any) => {
@@ -157,17 +157,42 @@ export class ChatRoomComponent implements OnInit, OnDestroy, AfterViewChecked {
     });
   }
 
+  private loadGroupMessageHistory(groupId: string): void {
+    this.loading = true;
+    this.messages = []; // Clear current messages
+    
+    this.authService.getGroupMessageHistory(groupId).subscribe({
+      next: (messages: Message[]) => {
+        this.messages = messages;
+        this.loading = false;
+        this.shouldScrollToBottom = true;
+      },
+      error: (error: any) => {
+        console.error('Error loading group message history:', error);
+        this.loading = false;
+      }
+    });
+  }
+
   sendMessage(): void {
-    if (this.newMessage.trim() && this.selectedUser && this.currentUser) {
+    if (this.newMessage.trim() && this.currentUser) {
       const message: Message = {
         sender: this.currentUser,
-        receiver: this.selectedUser,
         content: this.newMessage.trim(),
         type: MessageType.CHAT,
         timestamp: new Date()
       };
 
-      this.chatService.sendMessage(message);
+      if (this.selectedGroup) {
+        // Send group message
+        message.groupId = this.selectedGroup.id;
+        this.chatService.sendGroupMessage(message, this.selectedGroup.id);
+      } else if (this.selectedUser) {
+        // Send private message
+        message.receiver = this.selectedUser;
+        this.chatService.sendMessage(message);
+      }
+
       this.newMessage = '';
       this.shouldScrollToBottom = true;
     }
@@ -204,12 +229,25 @@ export class ChatRoomComponent implements OnInit, OnDestroy, AfterViewChecked {
   }
 
   private isMessageForCurrentConversation(message: Message): boolean {
-    // System messages (JOIN/LEAVE) should always be shown
+    // System messages (JOIN/LEAVE) should be shown based on context
     if (message.type === MessageType.JOIN || message.type === MessageType.LEAVE) {
-      return true;
+      // Show system messages for the current group or general chat
+      if (this.selectedGroup && message.groupId === this.selectedGroup.id) {
+        return true;
+      }
+      // Show general system messages when in private chat
+      if (this.selectedUser && !message.groupId) {
+        return true;
+      }
+      return false;
     }
 
-    // If no user is selected, don't show regular chat messages
+    // Group messages
+    if (message.groupId) {
+      return this.selectedGroup?.id === message.groupId;
+    }
+
+    // Private messages
     if (!this.selectedUser || !this.currentUser) {
       return false;
     }
@@ -236,5 +274,48 @@ export class ChatRoomComponent implements OnInit, OnDestroy, AfterViewChecked {
 
   trackByMessageId(index: number, message: Message): number | string {
     return message.id || `${message.sender.id}-${message.timestamp.getTime()}`;
+  }
+
+  // Group functionality methods
+  switchToUsersTab(): void {
+    this.activeTab = 'users';
+    this.selectedGroup = null;
+  }
+
+  switchToGroupsTab(): void {
+    this.activeTab = 'groups';
+    this.selectedUser = null;
+  }
+
+  onCreateGroupClick(): void {
+    this.showGroupCreate = true;
+  }
+
+  onGroupCreated(group: Group): void {
+    this.showGroupCreate = false;
+    this.groups.push(group);
+    this.onGroupSelected(group);
+  }
+
+  onGroupCreateCancelled(): void {
+    this.showGroupCreate = false;
+  }
+
+  getCurrentConversationName(): string {
+    if (this.selectedGroup) {
+      return this.selectedGroup.name;
+    }
+    if (this.selectedUser) {
+      return this.selectedUser.username;
+    }
+    return 'Select a conversation';
+  }
+
+  isGroupConversation(): boolean {
+    return !!this.selectedGroup;
+  }
+
+  canSendMessage(): boolean {
+    return !!(this.selectedUser || this.selectedGroup);
   }
 }

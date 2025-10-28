@@ -28,33 +28,75 @@
   </nav>
 
   <div class="row g-0 main-content">
-    <!-- User List Sidebar -->
+    <!-- Sidebar -->
     <div class="col-md-3 sidebar">
-      <app-user-list
-        [users]="users"
-        [selectedUser]="selectedUser"
-        [currentUser]="currentUser"
-        (userSelected)="onUserSelected($event)">
-      </app-user-list>
+      <!-- Tab Navigation -->
+      <div class="sidebar-tabs">
+        <button 
+          class="tab-button"
+          [class.active]="activeTab === 'users'"
+          (click)="switchToUsersTab()">
+          <i class="fas fa-user me-2"></i>Users
+        </button>
+        <button 
+          class="tab-button"
+          [class.active]="activeTab === 'groups'"
+          (click)="switchToGroupsTab()">
+          <i class="fas fa-users me-2"></i>Groups
+        </button>
+      </div>
+
+      <!-- Users Tab -->
+      <div *ngIf="activeTab === 'users'" class="tab-content">
+        <app-user-list
+          [users]="users"
+          [selectedUser]="selectedUser"
+          [currentUser]="currentUser"
+          (userSelected)="onUserSelected($event)">
+        </app-user-list>
+      </div>
+
+      <!-- Groups Tab -->
+      <div *ngIf="activeTab === 'groups'" class="tab-content">
+        <app-group-list
+          [showMyGroups]="true"
+          [showAllGroups]="false"
+          (groupSelected)="onGroupSelected($event)"
+          (createGroupClicked)="onCreateGroupClick()">
+        </app-group-list>
+      </div>
     </div>
 
     <!-- Chat Area -->
     <div class="col-md-9 chat-area">
       <!-- Chat Header -->
-      <div class="chat-header" *ngIf="selectedUser">
+      <div class="chat-header" *ngIf="selectedUser || selectedGroup">
         <div class="d-flex align-items-center justify-content-between">
           <div class="d-flex align-items-center">
-            <div class="user-avatar me-3">
+            <!-- User Avatar -->
+            <div *ngIf="selectedUser" class="user-avatar me-3">
               <div class="avatar-circle" [class.online]="isOnline(selectedUser)">
                 {{ selectedUser.username.charAt(0).toUpperCase() }}
                 <div class="status-indicator" [class.online]="isOnline(selectedUser)"></div>
               </div>
             </div>
+            
+            <!-- Group Avatar -->
+            <div *ngIf="selectedGroup" class="group-avatar me-3">
+              <div class="avatar-circle group">
+                <i class="fas fa-users"></i>
+              </div>
+            </div>
+            
             <div>
-              <h6 class="mb-0">{{ selectedUser.username }}</h6>
-              <small [class]="getStatusClass(selectedUser)">
-                <i class="fas fa-circle me-1"></i>
-                {{ isOnline(selectedUser) ? 'Online' : 'Offline' }}
+              <h6 class="mb-0">{{ getCurrentConversationName() }}</h6>
+              <small class="text-muted">
+                <i *ngIf="selectedUser" class="fas fa-circle me-1" [class.text-success]="isOnline(selectedUser)" [class.text-secondary]="!isOnline(selectedUser)"></i>
+                <span *ngIf="selectedUser">{{ isOnline(selectedUser) ? 'Online' : 'Offline' }}</span>
+                <span *ngIf="selectedGroup">
+                  <i class="fas fa-users me-1"></i>
+                  {{ selectedGroup.memberCount }} member{{ selectedGroup.memberCount !== 1 ? 's' : '' }}
+                </span>
               </small>
             </div>
           </div>
@@ -64,6 +106,9 @@
             <button class="btn btn-sm btn-outline-secondary me-2" title="Refresh messages">
               <i class="fas fa-sync-alt"></i>
             </button>
+            <button *ngIf="selectedGroup" class="btn btn-sm btn-outline-secondary me-2" title="Group info">
+              <i class="fas fa-info-circle"></i>
+            </button>
             <button class="btn btn-sm btn-outline-secondary" title="Clear chat">
               <i class="fas fa-trash"></i>
             </button>
@@ -72,11 +117,11 @@
       </div>
 
       <!-- Welcome Message -->
-      <div *ngIf="!selectedUser" class="welcome-area">
+      <div *ngIf="!selectedUser && !selectedGroup" class="welcome-area">
         <div class="text-center text-muted">
           <i class="fas fa-comments fa-4x mb-4 text-primary"></i>
           <h3>Welcome to Real-Time Chat!</h3>
-          <p class="lead">Select a user from the sidebar to start chatting</p>
+          <p class="lead">Select a user or group from the sidebar to start chatting</p>
           <div class="mt-4">
             <div class="d-flex justify-content-center align-items-center">
               <i [class]="connectionStatus ? 'fas fa-wifi text-success' : 'fas fa-wifi-slash text-danger'"></i>
@@ -89,7 +134,7 @@
       </div>
 
       <!-- Messages Area -->
-      <div *ngIf="selectedUser" class="message-area" #messageArea>
+      <div *ngIf="selectedUser || selectedGroup" class="message-area" #messageArea>
         <!-- Loading State -->
         <div *ngIf="loading" class="loading-state">
           <div class="spinner-border text-primary" role="status">
@@ -104,7 +149,7 @@
             *ngFor="let message of messages; trackBy: trackByMessageId"
             [message]="message"
             [currentUser]="currentUser!"
-            [isGroupChat]="false">
+            [isGroupChat]="isGroupConversation()">
           </app-message>
 
           <!-- Empty State -->
@@ -128,7 +173,7 @@
       </div>
 
       <!-- Message Input -->
-      <div *ngIf="selectedUser" class="message-input">
+      <div *ngIf="canSendMessage()" class="message-input">
         <div class="input-group">
           <input 
             type="text" 
@@ -136,14 +181,14 @@
             [(ngModel)]="newMessage"
             (input)="onMessageInput()"
             (keypress)="onKeyPress($event)"
-            placeholder="Type your message..."
-            [disabled]="!selectedUser || !connectionStatus"
+            [placeholder]="selectedGroup ? 'Type a message to ' + selectedGroup.name + '...' : 'Type your message...'"
+            [disabled]="!canSendMessage() || !connectionStatus"
             maxlength="1000">
           <button 
             class="btn btn-primary" 
             type="button" 
             (click)="sendMessage()"
-            [disabled]="!newMessage.trim() || !selectedUser || !connectionStatus"
+            [disabled]="!newMessage.trim() || !canSendMessage() || !connectionStatus"
             title="Send message">
             <i class="fas fa-paper-plane"></i>
           </button>
@@ -154,6 +199,15 @@
           <small class="text-muted">{{ newMessage.length }}/1000</small>
         </div>
       </div>
+    </div>
+  </div>
+
+  <!-- Group Create Modal -->
+  <app-group-create
+    *ngIf="showGroupCreate"
+    (groupCreated)="onGroupCreated($event)"
+    (cancelled)="onGroupCreateCancelled()">
+  </app-group-create>
     </div>
   </div>
 </div>
