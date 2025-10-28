@@ -1,0 +1,161 @@
+.message-wrapper {
+  display: flex;
+  margin-bottom: 1rem;
+  animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* System Messages */
+.system-message {
+  justify-content: center;
+}
+
+.system-message-content {
+  display: flex;
+  align-items: center;
+  background-color: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 20px;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  color: #6c757d;
+  max-width: 80%;
+}
+
+.system-message-icon {
+  margin-right: 0.5rem;
+  color: #007bff;
+}
+
+.system-message-text {
+  flex: 1;
+  text-align: center;
+}
+
+.system-message-time {
+  margin-left: 0.5rem;
+  font-size: 0.75rem;
+  opacity: 0.7;
+}
+
+/* Regular Chat Messages */
+.message-bubble {
+  max-width: 70%;
+  padding: 0.75rem 1rem;
+  border-radius: 1rem;
+  word-wrap: break-word;
+  position: relative;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease;
+}
+
+.message-bubble:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+}
+
+.message-sent {
+  background: linear-gradient(135deg, #007bff, #0056b3);
+  color: white;
+  margin-left: auto;
+  border-bottom-right-radius: 0.25rem;
+}
+
+.message-received {
+  background-color: #ffffff;
+  color: #333;
+  border: 1px solid #dee2e6;
+  border-bottom-left-radius: 0.25rem;
+}
+
+.message-sender {
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+  opacity: 0.8;
+}
+
+.message-sent .message-sender {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.message-received .message-sender {
+  color: #007bff;
+}
+
+.message-content {
+  margin-bottom: 0.25rem;
+  line-height: 1.4;
+  white-space: pre-wrap;
+}
+
+.message-time {
+  font-size: 0.75rem;
+  opacity: 0.7;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.message-status {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 0.5rem;
+}
+
+.message-status i {
+  font-size: 0.7rem;
+  opacity: 0.8;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .message-bubble {
+    max-width: 85%;
+    padding: 0.6rem 0.8rem;
+  }
+  
+  .system-message-content {
+    max-width: 90%;
+    padding: 0.4rem 0.8rem;
+  }
+}
+
+/* Message grouping - reduce margin for consecutive messages from same sender */
+.message-wrapper + .message-wrapper.message-sent .message-bubble,
+.message-wrapper + .message-wrapper.message-received .message-bubble {
+  margin-top: -0.5rem;
+}
+
+/* Special styling for long messages */
+.message-content {
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.message-content::-webkit-scrollbar {
+  width: 4px;
+}
+
+.message-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.message-content::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 2px;
+}
+
+.message-sent .message-content::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.3);
+}

@@ -1,0 +1,37 @@
+<div class="message-wrapper" [ngClass]="messageTypeClass">
+  <!-- System Messages (JOIN/LEAVE) -->
+  <div *ngIf="isSystemMessage" class="system-message-content">
+    <div class="system-message-icon">
+      <i [class]="systemMessageIcon"></i>
+    </div>
+    <div class="system-message-text">
+      {{ message.content }}
+    </div>
+    <div class="system-message-time">
+      {{ formattedTime }}
+    </div>
+  </div>
+
+  <!-- Regular Chat Messages -->
+  <div *ngIf="!isSystemMessage" class="message-bubble" [ngClass]="messageTypeClass">
+    <!-- Sender name for group chats and received messages -->
+    <div *ngIf="(isGroupChat || !isSentByCurrentUser) && !isSystemMessage" class="message-sender">
+      {{ message.sender.username }}
+    </div>
+    
+    <!-- Message content -->
+    <div class="message-content">
+      {{ message.content }}
+    </div>
+    
+    <!-- Message timestamp -->
+    <div class="message-time">
+      {{ formattedTime }}
+    </div>
+    
+    <!-- Message status indicator for sent messages -->
+    <div *ngIf="isSentByCurrentUser" class="message-status">
+      <i class="fas fa-check" title="Sent"></i>
+    </div>
+  </div>
+</div>

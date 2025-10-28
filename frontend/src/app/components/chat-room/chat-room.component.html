@@ -1,0 +1,159 @@
+<div class="container-fluid chat-container">
+  <!-- Navigation Bar -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="#">
+        <i class="fas fa-comments me-2"></i>
+        Real-Time Chat
+      </a>
+      <div class="navbar-nav ms-auto d-flex align-items-center">
+        <!-- Connection Status -->
+        <div class="connection-indicator me-3">
+          <i [class]="connectionStatus ? 'fas fa-circle text-success' : 'fas fa-circle text-danger'"></i>
+          <small [class]="getConnectionStatusClass()">{{ getConnectionStatusText() }}</small>
+        </div>
+        
+        <!-- User Info -->
+        <span class="navbar-text me-3">
+          <i class="fas fa-user me-1"></i>
+          Welcome, {{ currentUser?.username }}!
+        </span>
+        
+        <!-- Logout Button -->
+        <button class="btn btn-outline-light btn-sm" (click)="logout()">
+          <i class="fas fa-sign-out-alt me-1"></i>Logout
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <div class="row g-0 main-content">
+    <!-- User List Sidebar -->
+    <div class="col-md-3 sidebar">
+      <app-user-list
+        [users]="users"
+        [selectedUser]="selectedUser"
+        [currentUser]="currentUser"
+        (userSelected)="onUserSelected($event)">
+      </app-user-list>
+    </div>
+
+    <!-- Chat Area -->
+    <div class="col-md-9 chat-area">
+      <!-- Chat Header -->
+      <div class="chat-header" *ngIf="selectedUser">
+        <div class="d-flex align-items-center justify-content-between">
+          <div class="d-flex align-items-center">
+            <div class="user-avatar me-3">
+              <div class="avatar-circle" [class.online]="isOnline(selectedUser)">
+                {{ selectedUser.username.charAt(0).toUpperCase() }}
+                <div class="status-indicator" [class.online]="isOnline(selectedUser)"></div>
+              </div>
+            </div>
+            <div>
+              <h6 class="mb-0">{{ selectedUser.username }}</h6>
+              <small [class]="getStatusClass(selectedUser)">
+                <i class="fas fa-circle me-1"></i>
+                {{ isOnline(selectedUser) ? 'Online' : 'Offline' }}
+              </small>
+            </div>
+          </div>
+          
+          <!-- Chat Actions -->
+          <div class="chat-actions">
+            <button class="btn btn-sm btn-outline-secondary me-2" title="Refresh messages">
+              <i class="fas fa-sync-alt"></i>
+            </button>
+            <button class="btn btn-sm btn-outline-secondary" title="Clear chat">
+              <i class="fas fa-trash"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Welcome Message -->
+      <div *ngIf="!selectedUser" class="welcome-area">
+        <div class="text-center text-muted">
+          <i class="fas fa-comments fa-4x mb-4 text-primary"></i>
+          <h3>Welcome to Real-Time Chat!</h3>
+          <p class="lead">Select a user from the sidebar to start chatting</p>
+          <div class="mt-4">
+            <div class="d-flex justify-content-center align-items-center">
+              <i [class]="connectionStatus ? 'fas fa-wifi text-success' : 'fas fa-wifi-slash text-danger'"></i>
+              <span class="ms-2" [class]="getConnectionStatusClass()">
+                {{ getConnectionStatusText() }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Messages Area -->
+      <div *ngIf="selectedUser" class="message-area" #messageArea>
+        <!-- Loading State -->
+        <div *ngIf="loading" class="loading-state">
+          <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading messages...</span>
+          </div>
+          <p class="mt-2 text-muted">Loading conversation...</p>
+        </div>
+
+        <!-- Messages -->
+        <div *ngIf="!loading" class="messages-container">
+          <app-message
+            *ngFor="let message of messages; trackBy: trackByMessageId"
+            [message]="message"
+            [currentUser]="currentUser!"
+            [isGroupChat]="false">
+          </app-message>
+
+          <!-- Empty State -->
+          <div *ngIf="messages.length === 0" class="empty-messages">
+            <div class="text-center text-muted">
+              <i class="fas fa-comment-dots fa-2x mb-3"></i>
+              <p>No messages yet. Start the conversation!</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Typing Indicator -->
+        <div *ngIf="isTyping" class="typing-indicator">
+          <div class="typing-dots">
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+          <small class="text-muted ms-2">You are typing...</small>
+        </div>
+      </div>
+
+      <!-- Message Input -->
+      <div *ngIf="selectedUser" class="message-input">
+        <div class="input-group">
+          <input 
+            type="text" 
+            class="form-control" 
+            [(ngModel)]="newMessage"
+            (input)="onMessageInput()"
+            (keypress)="onKeyPress($event)"
+            placeholder="Type your message..."
+            [disabled]="!selectedUser || !connectionStatus"
+            maxlength="1000">
+          <button 
+            class="btn btn-primary" 
+            type="button" 
+            (click)="sendMessage()"
+            [disabled]="!newMessage.trim() || !selectedUser || !connectionStatus"
+            title="Send message">
+            <i class="fas fa-paper-plane"></i>
+          </button>
+        </div>
+        
+        <!-- Character Counter -->
+        <div class="character-counter" *ngIf="newMessage.length > 800">
+          <small class="text-muted">{{ newMessage.length }}/1000</small>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
