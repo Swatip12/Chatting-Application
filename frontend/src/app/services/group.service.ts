@@ -13,23 +13,7 @@ export interface GroupMemberRequest {
   username: string;
 }
 
-export interface GroupResponse {
-  id: string;
-  name: string;
-  description?: string;
-  createdBy: string;
-  members?: UserResponse[];
-  memberCount: number;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-export interface UserResponse {
-  id: number;
-  username: string;
-  status: string;
-  lastSeen?: Date;
-}
+import { Group, GroupMember } from '../models/group.model';
 
 export interface ApiResponse<T> {
   success: boolean;
@@ -42,16 +26,16 @@ export interface ApiResponse<T> {
 })
 export class GroupService {
   private apiUrl = `${environment.apiUrl}/groups`;
-  private userGroupsSubject = new BehaviorSubject<GroupResponse[]>([]);
-  private allGroupsSubject = new BehaviorSubject<GroupResponse[]>([]);
+  private userGroupsSubject = new BehaviorSubject<Group[]>([]);
+  private allGroupsSubject = new BehaviorSubject<Group[]>([]);
 
   constructor(private http: HttpClient) {}
 
   /**
    * Create a new group
    */
-  createGroup(groupRequest: GroupRequest): Observable<GroupResponse> {
-    return this.http.post<ApiResponse<GroupResponse>>(`${this.apiUrl}`, groupRequest)
+  createGroup(groupRequest: GroupRequest): Observable<Group> {
+    return this.http.post<ApiResponse<Group>>(`${this.apiUrl}`, groupRequest)
       .pipe(
         map(response => response.data),
         tap(() => this.refreshUserGroups())
@@ -61,18 +45,18 @@ export class GroupService {
   /**
    * Get group information by ID
    */
-  getGroup(groupId: string, includeMembers: boolean = false): Observable<GroupResponse> {
+  getGroup(groupId: string, includeMembers: boolean = false): Observable<Group> {
     const params = new HttpParams().set('includeMembers', includeMembers.toString());
-    return this.http.get<ApiResponse<GroupResponse>>(`${this.apiUrl}/${groupId}`, { params })
+    return this.http.get<ApiResponse<Group>>(`${this.apiUrl}/${groupId}`, { params })
       .pipe(map(response => response.data));
   }
 
   /**
    * Get all groups where the current user is a member
    */
-  getUserGroups(limit: number = 20): Observable<GroupResponse[]> {
+  getUserGroups(limit: number = 20): Observable<Group[]> {
     const params = new HttpParams().set('limit', limit.toString());
-    return this.http.get<ApiResponse<GroupResponse[]>>(`${this.apiUrl}/my`, { params })
+    return this.http.get<ApiResponse<Group[]>>(`${this.apiUrl}/my`, { params })
       .pipe(
         map(response => response.data),
         tap(groups => this.userGroupsSubject.next(groups))
@@ -82,9 +66,9 @@ export class GroupService {
   /**
    * Get all available groups (for discovery)
    */
-  getAllGroups(limit: number = 50): Observable<GroupResponse[]> {
+  getAllGroups(limit: number = 50): Observable<Group[]> {
     const params = new HttpParams().set('limit', limit.toString());
-    return this.http.get<ApiResponse<GroupResponse[]>>(`${this.apiUrl}`, { params })
+    return this.http.get<ApiResponse<Group[]>>(`${this.apiUrl}`, { params })
       .pipe(
         map(response => response.data),
         tap(groups => this.allGroupsSubject.next(groups))
@@ -94,19 +78,19 @@ export class GroupService {
   /**
    * Search groups by name
    */
-  searchGroups(searchTerm: string, limit: number = 20): Observable<GroupResponse[]> {
+  searchGroups(searchTerm: string, limit: number = 20): Observable<Group[]> {
     const params = new HttpParams()
       .set('q', searchTerm)
       .set('limit', limit.toString());
-    return this.http.get<ApiResponse<GroupResponse[]>>(`${this.apiUrl}/search`, { params })
+    return this.http.get<ApiResponse<Group[]>>(`${this.apiUrl}/search`, { params })
       .pipe(map(response => response.data));
   }
 
   /**
    * Add a member to a group
    */
-  addMember(groupId: string, memberRequest: GroupMemberRequest): Observable<GroupResponse> {
-    return this.http.post<ApiResponse<GroupResponse>>(`${this.apiUrl}/${groupId}/members`, memberRequest)
+  addMember(groupId: string, memberRequest: GroupMemberRequest): Observable<Group> {
+    return this.http.post<ApiResponse<Group>>(`${this.apiUrl}/${groupId}/members`, memberRequest)
       .pipe(
         map(response => response.data),
         tap(() => this.refreshUserGroups())
@@ -116,8 +100,8 @@ export class GroupService {
   /**
    * Remove a member from a group
    */
-  removeMember(groupId: string, memberRequest: GroupMemberRequest): Observable<GroupResponse> {
-    return this.http.delete<ApiResponse<GroupResponse>>(`${this.apiUrl}/${groupId}/members`, { body: memberRequest })
+  removeMember(groupId: string, memberRequest: GroupMemberRequest): Observable<Group> {
+    return this.http.delete<ApiResponse<Group>>(`${this.apiUrl}/${groupId}/members`, { body: memberRequest })
       .pipe(
         map(response => response.data),
         tap(() => this.refreshUserGroups())
@@ -135,14 +119,14 @@ export class GroupService {
   /**
    * Get user groups as observable
    */
-  getUserGroupsObservable(): Observable<GroupResponse[]> {
+  getUserGroupsObservable(): Observable<Group[]> {
     return this.userGroupsSubject.asObservable();
   }
 
   /**
    * Get all groups as observable
    */
-  getAllGroupsObservable(): Observable<GroupResponse[]> {
+  getAllGroupsObservable(): Observable<Group[]> {
     return this.allGroupsSubject.asObservable();
   }
 

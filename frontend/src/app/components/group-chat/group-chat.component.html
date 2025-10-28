@@ -1,129 +1,117 @@
 <div class="group-chat-container">
-  <!-- Group Header -->
-  <div class="group-header">
-    <div class="group-info">
-      <h5 class="mb-0">
-        <i class="fas fa-users me-2"></i>
-        {{ group.name }}
-      </h5>
-      <small class="text-muted">
-        {{ group.memberCount }} member{{ group.memberCount !== 1 ? 's' : '' }}
-      </small>
-    </div>
-    <div class="group-actions">
-      <button 
-        class="btn btn-sm btn-outline-primary"
-        (click)="toggleMembers()"
-        [class.active]="showMembers">
-        <i class="fas fa-users"></i>
-        Members
-      </button>
-    </div>
-  </div>
-
-  <div class="group-content">
-    <!-- Members Sidebar -->
-    <div class="members-sidebar" [class.show]="showMembers" *ngIf="showMembers && group.members">
-      <div class="members-header">
-        <h6 class="mb-0">Group Members</h6>
-        <button class="btn btn-sm btn-outline-secondary" (click)="toggleMembers()">
-          <i class="fas fa-times"></i>
-        </button>
-      </div>
-      <div class="members-list">
-        <div *ngFor="let member of group.members" class="member-item">
-          <div class="member-avatar">
-            <i class="fas fa-user"></i>
-          </div>
-          <div class="member-info">
-            <div class="member-name">
-              {{ member.username }}
-              <span *ngIf="member.username === group.createdBy" class="creator-badge">
-                <i class="fas fa-crown" title="Group Creator"></i>
-              </span>
-            </div>
-            <small class="member-status" [class.online]="member.status === 'ONLINE'">
-              {{ member.status === 'ONLINE' ? 'Online' : 'Offline' }}
+    <!-- Group Header -->
+    <div class="group-header">
+        <div class="group-info">
+            <h5 class="mb-0">
+                <i class="fas fa-users me-2"></i>
+                {{ group.name }}
+            </h5>
+            <small class="text-muted">
+                {{ group.memberCount }} member{{ group.memberCount !== 1 ? 's' : '' }}
             </small>
-          </div>
         </div>
-      </div>
+        <div class="group-actions">
+            <button class="btn btn-sm btn-outline-primary" (click)="toggleMembers()" [class.active]="showMembers">
+                <i class="fas fa-users"></i>
+                Members
+            </button>
+        </div>
     </div>
 
-    <!-- Chat Area -->
-    <div class="chat-area" [class.with-sidebar]="showMembers">
-      <!-- Messages Container -->
-      <div class="messages-container" #messagesContainer>
-        <!-- Loading Spinner -->
-        <div *ngIf="isLoading" class="text-center py-3">
-          <div class="spinner-border" role="status">
-            <span class="visually-hidden">Loading messages...</span>
-          </div>
+    <div class="group-content">
+        <!-- Members Sidebar -->
+        <div class="members-sidebar" [class.show]="showMembers" *ngIf="showMembers && group.members">
+            <div class="members-header">
+                <h6 class="mb-0">Group Members</h6>
+                <button class="btn btn-sm btn-outline-secondary" (click)="toggleMembers()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="members-list">
+                <div *ngFor="let member of group.members" class="member-item">
+                    <div class="member-avatar">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div class="member-info">
+                        <div class="member-name">
+                            {{ member.username }}
+                            <span *ngIf="member.username === group.createdBy" class="creator-badge">
+                                <i class="fas fa-crown" title="Group Creator"></i>
+                            </span>
+                        </div>
+                        <small class="member-status" [class.online]="member.status === 'ONLINE'">
+                            {{ member.status === 'ONLINE' ? 'Online' : 'Offline' }}
+                        </small>
+                    </div>
+                </div>
+            </div>
         </div>
 
-        <!-- Messages -->
-        <div *ngIf="!isLoading">
-          <ng-container *ngFor="let message of messages; let i = index">
-            <!-- Date Separator -->
-            <div *ngIf="shouldShowDateSeparator(i)" class="date-separator">
-              <span>{{ getMessageDate(message) }}</span>
+        <!-- Chat Area -->
+        <div class="chat-area" [class.with-sidebar]="showMembers">
+            <!-- Messages Container -->
+            <div class="messages-container" #messagesContainer>
+                <!-- Loading Spinner -->
+                <div *ngIf="isLoading" class="text-center py-3">
+                    <div class="spinner-border" role="status">
+                        <span class="visually-hidden">Loading messages...</span>
+                    </div>
+                </div>
+
+                <!-- Messages -->
+                <div *ngIf="!isLoading">
+                    <ng-container *ngFor="let message of messages; let i = index">
+                        <!-- Date Separator -->
+                        <div *ngIf="shouldShowDateSeparator(i)" class="date-separator">
+                            <span>{{ getMessageDate(message) }}</span>
+                        </div>
+
+                        <!-- System Messages -->
+                        <div *ngIf="isSystemMessage(message)" class="system-message">
+                            <small class="text-muted">
+                                <i class="fas fa-info-circle me-1"></i>
+                                {{ message.content }}
+                            </small>
+                        </div>
+
+                        <!-- Chat Messages -->
+                        <div *ngIf="!isSystemMessage(message)" class="message-wrapper"
+                            [class.own-message]="isOwnMessage(message)">
+                            <div class="message-bubble">
+                                <div class="message-header" *ngIf="!isOwnMessage(message)">
+                                    <strong>{{ message.sender.username }}</strong>
+                                </div>
+                                <div class="message-content">
+                                    {{ message.content }}
+                                </div>
+                                <div class="message-time">
+                                    {{ getMessageTime(message) }}
+                                </div>
+                            </div>
+                        </div>
+                    </ng-container>
+
+                    <!-- Empty State -->
+                    <div *ngIf="messages.length === 0" class="empty-messages">
+                        <div class="text-center py-4">
+                            <i class="fas fa-comments fa-2x text-muted mb-2"></i>
+                            <p class="text-muted">No messages yet. Start the conversation!</p>
+                        </div>
+                    </div>
+                </div>
             </div>
 
-            <!-- System Messages -->
-            <div *ngIf="isSystemMessage(message)" class="system-message">
-              <small class="text-muted">
-                <i class="fas fa-info-circle me-1"></i>
-                {{ message.content }}
-              </small>
-            </div>
-
-            <!-- Chat Messages -->
-            <div *ngIf="!isSystemMessage(message)" 
-                 class="message-wrapper"
-                 [class.own-message]="isOwnMessage(message)">
-              <div class="message-bubble">
-                <div class="message-header" *ngIf="!isOwnMessage(message)">
-                  <strong>{{ message.sender.username }}</strong>
+            <!-- Message Input -->
+            <div class="message-input-container">
+                <div class="input-group">
+                    <textarea class="form-control message-input" placeholder="Type your message..."
+                        [(ngModel)]="newMessage" (keypress)="onKeyPress($event)" rows="1" maxlength="1000"></textarea>
+                    <button class="btn btn-primary send-button" (click)="sendMessage()" [disabled]="!newMessage.trim()">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
                 </div>
-                <div class="message-content">
-                  {{ message.content }}
-                </div>
-                <div class="message-time">
-                  {{ getMessageTime(message) }}
-                </div>
-              </div>
+                <small class="text-muted">Press Enter to send, Shift+Enter for new line</small>
             </div>
-          </ng-container>
-
-          <!-- Empty State -->
-          <div *ngIf="messages.length === 0" class="empty-messages">
-            <div class="text-center py-4">
-              <i class="fas fa-comments fa-2x text-muted mb-2"></i>
-              <p class="text-muted">No messages yet. Start the conversation!</p>
-            </div>
-          </div>
         </div>
-      </div>
-
-      <!-- Message Input -->
-      <div class="message-input-container">
-        <div class="input-group">
-          <textarea 
-            class="form-control message-input"
-            placeholder="Type your message..."
-            [(ngModel)]="newMessage"
-            (keypress)="onKeyPress($event)"
-            rows="1"
-            maxlength="1000"></textarea>
-          <button 
-            class="btn btn-primary send-button"
-            (click)="sendMessage()"
-            [disabled]="!newMessage.trim()">
-            <i class="fas fa-paper-plane"></i>
-          </button>
-        </div>
-        <small class="text-muted">Press Enter to send, Shift+Enter for new line</small>
-      </div>
     </div>
-  </div>
 </div>
