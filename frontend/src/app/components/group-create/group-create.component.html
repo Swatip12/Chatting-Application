@@ -1,0 +1,71 @@
+<div class="modal fade show d-block" tabindex="-1" role="dialog" style="background-color: rgba(0,0,0,0.5);">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Create New Group</h5>
+        <button type="button" class="btn-close" (click)="onCancel()" [disabled]="isLoading"></button>
+      </div>
+      
+      <form [formGroup]="createGroupForm" (ngSubmit)="onSubmit()">
+        <div class="modal-body">
+          <!-- Error Message -->
+          <div *ngIf="errorMessage" class="alert alert-danger" role="alert">
+            {{ errorMessage }}
+          </div>
+
+          <!-- Group Name -->
+          <div class="mb-3">
+            <label for="groupName" class="form-label">Group Name *</label>
+            <input 
+              type="text" 
+              class="form-control" 
+              id="groupName"
+              formControlName="name"
+              [class.is-invalid]="name?.invalid && name?.touched"
+              placeholder="Enter group name"
+              maxlength="100">
+            <div *ngIf="name?.invalid && name?.touched" class="invalid-feedback">
+              <div *ngIf="name?.errors?.['required']">Group name is required</div>
+              <div *ngIf="name?.errors?.['minlength']">Group name must be at least 1 character</div>
+              <div *ngIf="name?.errors?.['maxlength']">Group name cannot exceed 100 characters</div>
+            </div>
+          </div>
+
+          <!-- Group Description -->
+          <div class="mb-3">
+            <label for="groupDescription" class="form-label">Description (Optional)</label>
+            <textarea 
+              class="form-control" 
+              id="groupDescription"
+              formControlName="description"
+              [class.is-invalid]="description?.invalid && description?.touched"
+              placeholder="Enter group description"
+              rows="3"
+              maxlength="500"></textarea>
+            <div *ngIf="description?.invalid && description?.touched" class="invalid-feedback">
+              <div *ngIf="description?.errors?.['maxlength']">Description cannot exceed 500 characters</div>
+            </div>
+            <div class="form-text">{{ description?.value?.length || 0 }}/500 characters</div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button 
+            type="button" 
+            class="btn btn-secondary" 
+            (click)="onCancel()"
+            [disabled]="isLoading">
+            Cancel
+          </button>
+          <button 
+            type="submit" 
+            class="btn btn-primary"
+            [disabled]="createGroupForm.invalid || isLoading">
+            <span *ngIf="isLoading" class="spinner-border spinner-border-sm me-2" role="status"></span>
+            {{ isLoading ? 'Creating...' : 'Create Group' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

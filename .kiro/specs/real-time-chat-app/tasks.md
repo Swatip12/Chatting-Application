@@ -200,15 +200,20 @@
     - Implement message type handling for JOIN/LEAVE notifications
     - _Requirements: 7.2, 5.2, 5.3_
 
-- [ ] 8. Implement group chat functionality
-  - [ ] 8.1 Add group chat backend support
+- [-] 8. Implement group chat functionality
+
+
+  - [x] 8.1 Add group chat backend support
+
+
     - Extend MessageService to handle group message routing
     - Create group management logic for adding/removing participants
     - Implement group message broadcasting to all members
     - Add group message history persistence and retrieval
     - _Requirements: 6.1, 6.2, 6.4, 6.5_
 
-  - [ ] 8.2 Create group chat UI components
+  - [-] 8.2 Create group chat UI components
+
     - Add group creation and management interface
     - Implement group member list display in chat interface
     - Create group message sending and receiving functionality

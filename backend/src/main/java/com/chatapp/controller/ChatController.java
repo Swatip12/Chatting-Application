@@ -71,6 +71,12 @@ public class ChatController {
             chatMessage.setSenderUsername(principal.getName());
             chatMessage.setType(MessageType.CHAT);
             
+            // Validate group ID
+            if (chatMessage.getGroupId() == null || chatMessage.getGroupId().trim().isEmpty()) {
+                log.error("Group ID is required for group messages");
+                return;
+            }
+            
             // Save and broadcast group message using MessageService
             messageService.saveAndBroadcastGroupMessage(chatMessage);
             

@@ -1,0 +1,98 @@
+<div class="group-list-container">
+  <!-- Header -->
+  <div class="group-list-header">
+    <h6 class="mb-0">
+      <i class="fas fa-users me-2"></i>
+      {{ showMyGroups ? 'My Groups' : 'All Groups' }}
+    </h6>
+    <div class="header-actions">
+      <button 
+        class="btn btn-sm btn-outline-primary me-2" 
+        (click)="toggleSearch()"
+        title="Search Groups">
+        <i class="fas fa-search"></i>
+      </button>
+      <button 
+        class="btn btn-sm btn-primary" 
+        (click)="onCreateGroup()"
+        title="Create Group">
+        <i class="fas fa-plus"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- Search Bar -->
+  <div *ngIf="showSearch" class="search-container">
+    <div class="input-group input-group-sm">
+      <input 
+        type="text" 
+        class="form-control" 
+        placeholder="Search groups..."
+        [(ngModel)]="searchTerm"
+        (keyup.enter)="onSearch()"
+        (input)="onSearch()">
+      <button 
+        class="btn btn-outline-secondary" 
+        type="button" 
+        (click)="clearSearch()">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- Loading Spinner -->
+  <div *ngIf="isLoading" class="text-center py-3">
+    <div class="spinner-border spinner-border-sm" role="status">
+      <span class="visually-hidden">Loading...</span>
+    </div>
+  </div>
+
+  <!-- Groups List -->
+  <div class="groups-list" *ngIf="!isLoading">
+    <div 
+      *ngFor="let group of getDisplayGroups()" 
+      class="group-item"
+      (click)="onGroupClick(group)">
+      
+      <div class="group-info">
+        <div class="group-name">
+          {{ group.name }}
+          <span *ngIf="isGroupCreator(group)" class="creator-badge">
+            <i class="fas fa-crown" title="Group Creator"></i>
+          </span>
+        </div>
+        <div class="group-details">
+          <small class="text-muted">
+            <i class="fas fa-user me-1"></i>{{ group.memberCount }} member{{ group.memberCount !== 1 ? 's' : '' }}
+            <span class="ms-2">
+              <i class="fas fa-calendar me-1"></i>{{ group.createdAt | date:'short' }}
+            </span>
+          </small>
+        </div>
+        <div *ngIf="group.description" class="group-description">
+          <small class="text-muted">{{ group.description }}</small>
+        </div>
+      </div>
+
+      <div class="group-actions">
+        <i class="fas fa-chevron-right text-muted"></i>
+      </div>
+    </div>
+
+    <!-- Empty State -->
+    <div *ngIf="getDisplayGroups().length === 0" class="empty-state">
+      <div class="text-center py-4">
+        <i class="fas fa-users fa-2x text-muted mb-2"></i>
+        <p class="text-muted mb-0">
+          {{ searchTerm ? 'No groups found' : (showMyGroups ? 'No groups joined yet' : 'No groups available') }}
+        </p>
+        <button 
+          *ngIf="!searchTerm && showMyGroups" 
+          class="btn btn-sm btn-primary mt-2"
+          (click)="onCreateGroup()">
+          Create Your First Group
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

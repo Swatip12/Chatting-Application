@@ -92,6 +92,11 @@ public class MessageService {
             User sender = userRepository.findByUsername(chatMessage.getSenderUsername())
                     .orElseThrow(() -> new UserNotFoundException("Sender not found: " + chatMessage.getSenderUsername()));
 
+            // Validate group ID
+            if (chatMessage.getGroupId() == null || chatMessage.getGroupId().trim().isEmpty()) {
+                throw new IllegalArgumentException("Group ID is required for group messages");
+            }
+
             // Create and save group message entity
             Message message = new Message(sender, chatMessage.getContent(), chatMessage.getType(), chatMessage.getGroupId());
             Message savedMessage = messageRepository.save(message);
@@ -108,6 +113,35 @@ public class MessageService {
         } catch (Exception e) {
             log.error("Error saving and broadcasting group message: {}", e.getMessage(), e);
             throw e;
+        }
+    }
+
+    /**
+     * Broadcast group member join/leave notification
+     * @param groupId the group ID
+     * @param username the username of the member
+     * @param messageType JOIN or LEAVE
+     */
+    public void broadcastGroupMemberStatusChange(String groupId, String username, MessageType messageType) {
+        log.info("Broadcasting group member status change: {} - {} in group {}", username, messageType, groupId);
+
+        try {
+            // Create status message
+            ChatMessage statusMessage = new ChatMessage();
+            statusMessage.setSenderUsername("System");
+            statusMessage.setContent(messageType == MessageType.JOIN ? 
+                    username + " joined the group" : username + " left the group");
+            statusMessage.setType(messageType);
+            statusMessage.setGroupId(groupId);
+            statusMessage.setTimestamp(LocalDateTime.now());
+
+            // Broadcast to group topic
+            messagingTemplate.convertAndSend("/topic/group/" + groupId, statusMessage);
+
+            log.info("Group member status change broadcasted successfully for user: {} in group: {}", username, groupId);
+
+        } catch (Exception e) {
+            log.error("Error broadcasting group member status change: {}", e.getMessage(), e);
         }
     }
 

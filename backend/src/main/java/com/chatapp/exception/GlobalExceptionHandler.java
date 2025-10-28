@@ -61,6 +61,33 @@ public class GlobalExceptionHandler {
     }
     
     /**
+     * Handle group not found exception
+     */
+    @ExceptionHandler(GroupNotFoundException.class)
+    public ResponseEntity<ApiResponse<Object>> handleGroupNotFound(GroupNotFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(ApiResponse.error(ex.getMessage()));
+    }
+    
+    /**
+     * Handle duplicate group name exception
+     */
+    @ExceptionHandler(DuplicateGroupNameException.class)
+    public ResponseEntity<ApiResponse<Object>> handleDuplicateGroupName(DuplicateGroupNameException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(ApiResponse.error(ex.getMessage()));
+    }
+    
+    /**
+     * Handle unauthorized operation exception
+     */
+    @ExceptionHandler(UnauthorizedOperationException.class)
+    public ResponseEntity<ApiResponse<Object>> handleUnauthorizedOperation(UnauthorizedOperationException ex) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(ApiResponse.error(ex.getMessage()));
+    }
+    
+    /**
      * Handle general exceptions
      */
     @ExceptionHandler(Exception.class)

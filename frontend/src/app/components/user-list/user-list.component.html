@@ -29,7 +29,7 @@
   <!-- User List Content -->
   <div class="user-list-content">
     <!-- Online Users Section -->
-    <div *ngIf="users.filter(user => isOnline(user)).length > 0" class="user-section">
+    <div *ngIf="getOnlineUsersCount() > 0" class="user-section">
       <div class="section-header">
         <small class="text-muted text-uppercase fw-bold">
           <i class="fas fa-circle text-success me-1"></i>
@@ -37,42 +37,43 @@
         </small>
       </div>
       
-      <div 
-        *ngFor="let user of users | slice:0:50; trackBy: trackByUserId" 
-        class="user-item"
-        [class.active]="isSelected(user)"
-        [class.online]="isOnline(user)"
-        (click)="selectUser(user)"
-        *ngIf="isOnline(user)">
-        
-        <div class="d-flex align-items-center">
-          <!-- User Avatar -->
-          <div class="user-avatar me-3">
-            <div class="avatar-circle" [class.online]="isOnline(user)">
-              {{ getUserInitial(user.username) }}
-              <div class="status-indicator" [class.online]="isOnline(user)"></div>
-            </div>
-          </div>
+      <ng-container *ngFor="let user of users; trackBy: trackByUserId">
+        <div 
+          *ngIf="isOnline(user)"
+          class="user-item"
+          [class.active]="isSelected(user)"
+          [class.online]="isOnline(user)"
+          (click)="selectUser(user)">
           
-          <!-- User Info -->
-          <div class="user-info flex-grow-1">
-            <div class="user-name">{{ user.username }}</div>
-            <div class="user-status" [ngClass]="getStatusClass(user)">
-              <i [class]="getStatusIcon(user)" class="me-1"></i>
-              {{ getLastSeenText(user) }}
+          <div class="d-flex align-items-center">
+            <!-- User Avatar -->
+            <div class="user-avatar me-3">
+              <div class="avatar-circle" [class.online]="isOnline(user)">
+                {{ getUserInitial(user.username) }}
+                <div class="status-indicator" [class.online]="isOnline(user)"></div>
+              </div>
             </div>
-          </div>
-          
-          <!-- Selection Indicator -->
-          <div *ngIf="isSelected(user)" class="selection-indicator">
-            <i class="fas fa-check-circle text-primary"></i>
+            
+            <!-- User Info -->
+            <div class="user-info flex-grow-1">
+              <div class="user-name">{{ user.username }}</div>
+              <div class="user-status" [ngClass]="getStatusClass(user)">
+                <i [class]="getStatusIcon(user)" class="me-1"></i>
+                {{ getLastSeenText(user) }}
+              </div>
+            </div>
+            
+            <!-- Selection Indicator -->
+            <div *ngIf="isSelected(user)" class="selection-indicator">
+              <i class="fas fa-check-circle text-primary"></i>
+            </div>
           </div>
         </div>
-      </div>
+      </ng-container>
     </div>
 
     <!-- Offline Users Section -->
-    <div *ngIf="users.filter(user => !isOnline(user)).length > 0" class="user-section">
+    <div *ngIf="users.length - getOnlineUsersCount() > 0" class="user-section">
       <div class="section-header">
         <small class="text-muted text-uppercase fw-bold">
           <i class="far fa-circle text-muted me-1"></i>
@@ -80,38 +81,39 @@
         </small>
       </div>
       
-      <div 
-        *ngFor="let user of users | slice:0:50; trackBy: trackByUserId" 
-        class="user-item"
-        [class.active]="isSelected(user)"
-        [class.offline]="!isOnline(user)"
-        (click)="selectUser(user)"
-        *ngIf="!isOnline(user)">
-        
-        <div class="d-flex align-items-center">
-          <!-- User Avatar -->
-          <div class="user-avatar me-3">
-            <div class="avatar-circle offline">
-              {{ getUserInitial(user.username) }}
-              <div class="status-indicator offline"></div>
-            </div>
-          </div>
+      <ng-container *ngFor="let user of users; trackBy: trackByUserId">
+        <div 
+          *ngIf="!isOnline(user)"
+          class="user-item"
+          [class.active]="isSelected(user)"
+          [class.offline]="!isOnline(user)"
+          (click)="selectUser(user)">
           
-          <!-- User Info -->
-          <div class="user-info flex-grow-1">
-            <div class="user-name">{{ user.username }}</div>
-            <div class="user-status" [ngClass]="getStatusClass(user)">
-              <i [class]="getStatusIcon(user)" class="me-1"></i>
-              {{ getLastSeenText(user) }}
+          <div class="d-flex align-items-center">
+            <!-- User Avatar -->
+            <div class="user-avatar me-3">
+              <div class="avatar-circle offline">
+                {{ getUserInitial(user.username) }}
+                <div class="status-indicator offline"></div>
+              </div>
             </div>
-          </div>
-          
-          <!-- Selection Indicator -->
-          <div *ngIf="isSelected(user)" class="selection-indicator">
-            <i class="fas fa-check-circle text-primary"></i>
+            
+            <!-- User Info -->
+            <div class="user-info flex-grow-1">
+              <div class="user-name">{{ user.username }}</div>
+              <div class="user-status" [ngClass]="getStatusClass(user)">
+                <i [class]="getStatusIcon(user)" class="me-1"></i>
+                {{ getLastSeenText(user) }}
+              </div>
+            </div>
+            
+            <!-- Selection Indicator -->
+            <div *ngIf="isSelected(user)" class="selection-indicator">
+              <i class="fas fa-check-circle text-primary"></i>
+            </div>
           </div>
         </div>
-      </div>
+      </ng-container>
     </div>
 
     <!-- Empty State -->
