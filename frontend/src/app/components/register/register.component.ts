@@ -1,23 +1,27 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
+import { Subscription } from 'rxjs';
 import { AuthService } from '../../services/auth.service';
+import { LoadingService } from '../../services/loading.service';
 
 @Component({
   selector: 'app-register',
   templateUrl: './register.component.html',
   styleUrls: ['./register.component.css']
 })
-export class RegisterComponent implements OnInit {
+export class RegisterComponent implements OnInit, OnDestroy {
   registerForm: FormGroup;
   loading = false;
   errorMessage = '';
   successMessage = '';
+  private subscription: Subscription = new Subscription();
 
   constructor(
     private formBuilder: FormBuilder,
     private authService: AuthService,
-    private router: Router
+    private router: Router,
+    private loadingService: LoadingService
   ) {
     this.registerForm = this.formBuilder.group({
       username: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(20)]],
@@ -31,6 +35,17 @@ export class RegisterComponent implements OnInit {
     if (this.authService.isAuthenticated()) {
       this.router.navigate(['/chat']);
     }
+
+    // Subscribe to loading state for register
+    this.subscription.add(
+      this.loadingService.getLoadingState().subscribe(loading => {
+        this.loading = this.loadingService.isLoadingFor('register');
+      })
+    );
+  }
+
+  ngOnDestroy(): void {
+    this.subscription.unsubscribe();
   }
 
   passwordMatchValidator(form: FormGroup) {
@@ -49,8 +64,7 @@ export class RegisterComponent implements OnInit {
   }
 
   onSubmit(): void {
-    if (this.registerForm.valid) {
-      this.loading = true;
+    if (this.registerForm.valid && !this.loading) {
       this.errorMessage = '';
       this.successMessage = '';
       
@@ -61,15 +75,14 @@ export class RegisterComponent implements OnInit {
       
       this.authService.register(userData).subscribe({
         next: (response: any) => {
-          this.loading = false;
           this.successMessage = 'Registration successful! Redirecting to login...';
           setTimeout(() => {
             this.router.navigate(['/login']);
           }, 2000);
         },
         error: (error: any) => {
-          this.loading = false;
-          this.errorMessage = error.error?.message || 'Registration failed. Please try again.';
+          // Error handling is now done by the interceptor
+          console.error('Registration error:', error);
         }
       });
     }

@@ -3,6 +3,7 @@ import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { ChatService } from '../../services/chat.service';
 import { GroupService } from '../../services/group.service';
+import { NotificationService } from '../../services/notification.service';
 import { User } from '../../models/user.model';
 import { Message, MessageType } from '../../models/message.model';
 import { Group } from '../../models/group.model';
@@ -37,6 +38,7 @@ export class ChatRoomComponent implements OnInit, OnDestroy, AfterViewChecked {
     private authService: AuthService,
     private chatService: ChatService,
     private groupService: GroupService,
+    private notificationService: NotificationService,
     private router: Router
   ) {}
 
@@ -94,10 +96,23 @@ export class ChatRoomComponent implements OnInit, OnDestroy, AfterViewChecked {
     const connectionSub = this.chatService.getConnectionStatus().subscribe({
       next: (status: boolean) => {
         this.connectionStatus = status;
+        if (status) {
+          this.notificationService.showSuccess('Connected to chat server');
+        } else {
+          this.notificationService.showWarning('Disconnected from chat server');
+        }
       }
     });
 
-    this.subscriptions.push(messagesSub, userStatusSub, connectionSub);
+    // Subscribe to message status updates
+    const messageStatusSub = this.chatService.getMessageStatus().subscribe({
+      next: (statusUpdate) => {
+        // Handle message delivery status updates
+        console.log('Message status update:', statusUpdate);
+      }
+    });
+
+    this.subscriptions.push(messagesSub, userStatusSub, connectionSub, messageStatusSub);
 
     // Load initial data
     this.loadUsers();
@@ -175,7 +190,7 @@ export class ChatRoomComponent implements OnInit, OnDestroy, AfterViewChecked {
   }
 
   sendMessage(): void {
-    if (this.newMessage.trim() && this.currentUser) {
+    if (this.newMessage.trim() && this.currentUser && this.connectionStatus) {
       const message: Message = {
         sender: this.currentUser,
         content: this.newMessage.trim(),
@@ -183,18 +198,27 @@ export class ChatRoomComponent implements OnInit, OnDestroy, AfterViewChecked {
         timestamp: new Date()
       };
 
-      if (this.selectedGroup) {
-        // Send group message
-        message.groupId = this.selectedGroup.id;
-        this.chatService.sendGroupMessage(message, this.selectedGroup.id);
-      } else if (this.selectedUser) {
-        // Send private message
-        message.receiver = this.selectedUser;
-        this.chatService.sendMessage(message);
-      }
+      try {
+        if (this.selectedGroup) {
+          // Send group message
+          message.groupId = this.selectedGroup.id;
+          this.chatService.sendGroupMessage(message, this.selectedGroup.id);
+        } else if (this.selectedUser) {
+          // Send private message
+          message.receiver = this.selectedUser;
+          this.chatService.sendMessage(message);
+        }
 
-      this.newMessage = '';
-      this.shouldScrollToBottom = true;
+        this.newMessage = '';
+        this.shouldScrollToBottom = true;
+      } catch (error) {
+        console.error('Error sending message:', error);
+        this.notificationService.showError('Failed to send message. Please try again.');
+      }
+    } else if (!this.connectionStatus) {
+      this.notificationService.showWarning('Cannot send message: Not connected to chat server');
+    } else if (!this.newMessage.trim()) {
+      this.notificationService.showWarning('Please enter a message');
     }
   }
 
@@ -216,8 +240,26 @@ export class ChatRoomComponent implements OnInit, OnDestroy, AfterViewChecked {
   }
 
   logout(): void {
-    this.authService.logout();
-    this.router.navigate(['/login']);
+    // Disconnect from chat service first
+    this.chatService.disconnect();
+    
+    // Update user status to offline and logout
+    if (this.currentUser) {
+      this.authService.updateUserStatus('OFFLINE').subscribe({
+        next: () => {
+          this.authService.logout();
+          this.router.navigate(['/login']);
+        },
+        error: () => {
+          // Logout even if status update fails
+          this.authService.logout();
+          this.router.navigate(['/login']);
+        }
+      });
+    } else {
+      this.authService.logout();
+      this.router.navigate(['/login']);
+    }
   }
 
   isOnline(user: User): boolean {

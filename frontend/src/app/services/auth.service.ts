@@ -1,9 +1,11 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, BehaviorSubject } from 'rxjs';
-import { tap } from 'rxjs/operators';
+import { tap, finalize } from 'rxjs/operators';
 import { User, LoginRequest, RegisterRequest, AuthResponse } from '../models/user.model';
 import { Message } from '../models/message.model';
+import { LoadingService } from './loading.service';
+import { NotificationService } from './notification.service';
 
 @Injectable({
     providedIn: 'root'
@@ -13,7 +15,11 @@ export class AuthService {
     private currentUserSubject = new BehaviorSubject<User | null>(null);
     public currentUser$ = this.currentUserSubject.asObservable();
 
-    constructor(private http: HttpClient) {
+    constructor(
+        private http: HttpClient,
+        private loadingService: LoadingService,
+        private notificationService: NotificationService
+    ) {
         // Load user from localStorage on service initialization
         const storedUser = localStorage.getItem('currentUser');
         if (storedUser) {
@@ -22,10 +28,22 @@ export class AuthService {
     }
 
     register(userData: RegisterRequest): Observable<AuthResponse> {
-        return this.http.post<AuthResponse>(`${this.apiUrl}/register`, userData);
+        this.loadingService.setLoadingFor('register', true);
+        return this.http.post<AuthResponse>(`${this.apiUrl}/register`, userData)
+            .pipe(
+                tap((response: AuthResponse) => {
+                    if (response.success) {
+                        this.notificationService.showSuccess('Registration successful! Please log in.');
+                    }
+                }),
+                finalize(() => {
+                    this.loadingService.setLoadingFor('register', false);
+                })
+            );
     }
 
     login(credentials: LoginRequest): Observable<AuthResponse> {
+        this.loadingService.setLoadingFor('login', true);
         return this.http.post<AuthResponse>(`${this.apiUrl}/login`, credentials)
             .pipe(
                 tap((response: AuthResponse) => {
@@ -33,20 +51,30 @@ export class AuthService {
                         // Store user in localStorage
                         localStorage.setItem('currentUser', JSON.stringify(response.user));
                         this.currentUserSubject.next(response.user);
+                        this.notificationService.showSuccess(`Welcome back, ${response.user.username}!`);
                     }
+                }),
+                finalize(() => {
+                    this.loadingService.setLoadingFor('login', false);
                 })
             );
     }
 
     logout(): void {
+        this.loadingService.setLoadingFor('logout', true);
         // Call logout endpoint
         this.http.post(`${this.apiUrl}/logout`, {}).subscribe({
             next: () => {
                 this.clearUserData();
+                this.notificationService.showInfo('You have been logged out successfully.');
             },
             error: () => {
                 // Clear data even if logout request fails
                 this.clearUserData();
+                this.notificationService.showInfo('You have been logged out.');
+            },
+            complete: () => {
+                this.loadingService.setLoadingFor('logout', false);
             }
         });
     }

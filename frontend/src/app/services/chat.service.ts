@@ -5,6 +5,8 @@ import { BehaviorSubject, Observable, Subject } from 'rxjs';
 import { Message, ChatMessage, UserStatusMessage, MessageType } from '../models/message.model';
 import { User, UserStatus } from '../models/user.model';
 import { AuthService } from './auth.service';
+import { NotificationService } from './notification.service';
+import { ConnectionStatusService } from './connection-status.service';
 
 @Injectable({
   providedIn: 'root'
@@ -14,13 +16,18 @@ export class ChatService {
   private messageSubject = new Subject<Message>();
   private userStatusSubject = new BehaviorSubject<User[]>([]);
   private connectionStatusSubject = new BehaviorSubject<boolean>(false);
+  private messageStatusSubject = new Subject<{messageId: string, status: 'sending' | 'sent' | 'delivered' | 'failed'}>();
   
   private subscriptions: StompSubscription[] = [];
   private reconnectAttempts = 0;
   private maxReconnectAttempts = 5;
   private reconnectInterval = 5000; // 5 seconds
 
-  constructor(private authService: AuthService) {}
+  constructor(
+    private authService: AuthService,
+    private notificationService: NotificationService,
+    private connectionStatusService: ConnectionStatusService
+  ) {}
 
   connect(): void {
     const currentUser = this.authService.getCurrentUser();
@@ -52,7 +59,9 @@ export class ChatService {
     this.stompClient.onConnect = (frame: any) => {
       console.log('Connected to WebSocket:', frame);
       this.connectionStatusSubject.next(true);
+      this.connectionStatusService.updateChatConnectionStatus(true, 0);
       this.reconnectAttempts = 0;
+      this.notificationService.showSuccess('Connected to chat server');
       this.setupSubscriptions();
       this.notifyUserJoined();
     };
@@ -61,6 +70,8 @@ export class ChatService {
     this.stompClient.onStompError = (frame: any) => {
       console.error('STOMP error:', frame);
       this.connectionStatusSubject.next(false);
+      this.connectionStatusService.updateChatConnectionStatus(false, this.reconnectAttempts);
+      this.notificationService.showError('Chat connection error. Attempting to reconnect...');
       this.handleReconnection();
     };
 
@@ -68,6 +79,8 @@ export class ChatService {
     this.stompClient.onWebSocketError = (error: any) => {
       console.error('WebSocket error:', error);
       this.connectionStatusSubject.next(false);
+      this.connectionStatusService.updateChatConnectionStatus(false, this.reconnectAttempts);
+      this.notificationService.showError('Connection to chat server lost. Attempting to reconnect...');
       this.handleReconnection();
     };
 
@@ -75,6 +88,7 @@ export class ChatService {
     this.stompClient.onDisconnect = () => {
       console.log('Disconnected from WebSocket');
       this.connectionStatusSubject.next(false);
+      this.connectionStatusService.updateChatConnectionStatus(false, this.reconnectAttempts);
       this.clearSubscriptions();
     };
 
@@ -207,28 +221,49 @@ export class ChatService {
   sendMessage(message: Message): void {
     if (!this.stompClient || !this.stompClient.connected) {
       console.error('Cannot send message: Not connected to WebSocket');
+      this.notificationService.showError('Cannot send message: Not connected to chat server');
       return;
     }
 
-    const chatMessage: ChatMessage = {
-      sender: message.sender.username,
-      receiver: message.receiver?.username,
-      content: message.content,
-      type: message.type,
-      groupId: message.groupId
-    };
+    try {
+      const messageId = `msg-${Date.now()}-${Math.random()}`;
+      
+      // Emit sending status
+      this.messageStatusSubject.next({messageId, status: 'sending'});
 
-    const destination = message.groupId 
-      ? '/app/chat.sendGroupMessage' 
-      : '/app/chat.sendMessage';
+      const chatMessage: ChatMessage = {
+        sender: message.sender.username,
+        receiver: message.receiver?.username,
+        content: message.content,
+        type: message.type,
+        groupId: message.groupId
+      };
 
-    this.stompClient.publish({
-      destination: destination,
-      body: JSON.stringify(chatMessage)
-    });
+      const destination = message.groupId 
+        ? '/app/chat.sendGroupMessage' 
+        : '/app/chat.sendMessage';
 
-    // Add message to local message stream for immediate display
-    this.messageSubject.next(message);
+      this.stompClient.publish({
+        destination: destination,
+        body: JSON.stringify(chatMessage)
+      });
+
+      // Add message to local message stream for immediate display
+      const messageWithId = { ...message, id: messageId };
+      this.messageSubject.next(messageWithId);
+      
+      // Emit sent status after a short delay (simulating server processing)
+      setTimeout(() => {
+        this.messageStatusSubject.next({messageId, status: 'sent'});
+      }, 100);
+      
+    } catch (error) {
+      console.error('Error sending message:', error);
+      this.notificationService.showError('Failed to send message. Please try again.');
+      // Emit failed status
+      const messageId = `msg-${Date.now()}-${Math.random()}`;
+      this.messageStatusSubject.next({messageId, status: 'failed'});
+    }
   }
 
   sendGroupMessage(message: Message, groupId: string): void {
@@ -246,6 +281,10 @@ export class ChatService {
 
   getConnectionStatus(): Observable<boolean> {
     return this.connectionStatusSubject.asObservable();
+  }
+
+  getMessageStatus(): Observable<{messageId: string, status: 'sending' | 'sent' | 'delivered' | 'failed'}> {
+    return this.messageStatusSubject.asObservable();
   }
 
   disconnect(): void {
@@ -289,13 +328,19 @@ export class ChatService {
       this.reconnectAttempts++;
       console.log(`Attempting to reconnect... (${this.reconnectAttempts}/${this.maxReconnectAttempts})`);
       
+      // Use exponential backoff for reconnection attempts
+      const backoffDelay = this.reconnectInterval * Math.pow(2, this.reconnectAttempts - 1);
+      
       setTimeout(() => {
         if (!this.stompClient?.connected) {
+          this.connectionStatusService.updateChatConnectionStatus(false, this.reconnectAttempts);
+          this.notificationService.showInfo(`Reconnecting to chat server... (${this.reconnectAttempts}/${this.maxReconnectAttempts})`);
           this.connect();
         }
-      }, this.reconnectInterval * this.reconnectAttempts);
+      }, Math.min(backoffDelay, 30000)); // Cap at 30 seconds
     } else {
       console.error('Max reconnection attempts reached. Please refresh the page.');
+      this.notificationService.showError('Unable to reconnect to chat server. Please refresh the page.');
     }
   }
 
