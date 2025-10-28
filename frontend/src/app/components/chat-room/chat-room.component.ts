@@ -2,8 +2,10 @@ import { Component, OnInit, OnDestroy, ViewChild, ElementRef, AfterViewChecked }
 import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { ChatService } from '../../services/chat.service';
+import { GroupService } from '../../services/group.service';
 import { User } from '../../models/user.model';
 import { Message, MessageType } from '../../models/message.model';
+import { Group } from '../../models/group.model';
 import { Subscription } from 'rxjs';
 
 @Component({
@@ -15,12 +17,18 @@ export class ChatRoomComponent implements OnInit, OnDestroy, AfterViewChecked {
   @ViewChild('messageArea') private messageArea!: ElementRef;
   currentUser: User | null = null;
   users: User[] = [];
+  groups: Group[] = [];
   messages: Message[] = [];
   newMessage = '';
   selectedUser: User | null = null;
+  selectedGroup: Group | null = null;
   loading = false;
   connectionStatus = false;
   isTyping = false;
+  
+  // UI state
+  activeTab: 'users' | 'groups' = 'users';
+  showGroupCreate = false;
   
   private subscriptions: Subscription[] = [];
   private shouldScrollToBottom = false;
@@ -28,6 +36,7 @@ export class ChatRoomComponent implements OnInit, OnDestroy, AfterViewChecked {
   constructor(
     private authService: AuthService,
     private chatService: ChatService,
+    private groupService: GroupService,
     private router: Router
   ) {}
 
@@ -92,6 +101,7 @@ export class ChatRoomComponent implements OnInit, OnDestroy, AfterViewChecked {
 
     // Load initial data
     this.loadUsers();
+    this.loadGroups();
   }
 
   private loadUsers(): void {
@@ -105,9 +115,29 @@ export class ChatRoomComponent implements OnInit, OnDestroy, AfterViewChecked {
     });
   }
 
+  private loadGroups(): void {
+    this.groupService.getUserGroups().subscribe({
+      next: (groups: Group[]) => {
+        this.groups = groups;
+      },
+      error: (error: any) => {
+        console.error('Error loading groups:', error);
+      }
+    });
+  }
+
   onUserSelected(user: User): void {
     this.selectedUser = user;
+    this.selectedGroup = null; // Clear group selection
     this.loadMessageHistory(user.id);
+  }
+
+  onGroupSelected(group: Group): void {
+    this.selectedGroup = group;
+    this.selectedUser = null; // Clear user selection
+    this.loadGroupMessageHistory(group.id);
+    // Subscribe to group messages
+    this.chatService.subscribeToGroup(group.id);
   }
 
   private loadMessageHistory(userId: number): void {

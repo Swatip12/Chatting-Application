@@ -122,6 +122,36 @@ export class ChatService {
     this.subscriptions.push(privateMessageSub, publicMessageSub, userStatusSub);
   }
 
+  /**
+   * Subscribe to a specific group's messages
+   */
+  subscribeToGroup(groupId: string): void {
+    if (!this.stompClient || !this.stompClient.connected) {
+      console.error('Cannot subscribe to group: Not connected to WebSocket');
+      return;
+    }
+
+    const groupSub = this.stompClient.subscribe(
+      `/topic/group/${groupId}`,
+      (message: any) => {
+        const chatMessage: ChatMessage = JSON.parse(message.body);
+        this.handleIncomingMessage(chatMessage);
+      }
+    );
+
+    this.subscriptions.push(groupSub);
+    console.log(`Subscribed to group: ${groupId}`);
+  }
+
+  /**
+   * Unsubscribe from a specific group's messages
+   */
+  unsubscribeFromGroup(groupId: string): void {
+    // Note: In a more sophisticated implementation, we would track subscriptions by group ID
+    // For now, we rely on the automatic cleanup when disconnecting
+    console.log(`Unsubscribed from group: ${groupId}`);
+  }
+
   private handleIncomingMessage(chatMessage: ChatMessage): void {
     // Convert ChatMessage to Message format
     const message: Message = {
