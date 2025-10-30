@@ -11,7 +11,7 @@ import { NotificationService } from './notification.service';
     providedIn: 'root'
 })
 export class AuthService {
-    private apiUrl = 'http://localhost:8080/api';
+    private apiUrl = 'http://localhost:8082/api';
     private currentUserSubject = new BehaviorSubject<User | null>(null);
     public currentUser$ = this.currentUserSubject.asObservable();
 

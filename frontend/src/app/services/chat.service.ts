@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Client, StompSubscription } from '@stomp/stompjs';
-import * as SockJS from 'sockjs-client';
+import SockJS from 'sockjs-client';
 import { BehaviorSubject, Observable, Subject } from 'rxjs';
 import { Message, ChatMessage, UserStatusMessage, MessageType } from '../models/message.model';
 import { User, UserStatus } from '../models/user.model';
@@ -43,7 +43,7 @@ export class ChatService {
 
     // Create STOMP client with SockJS
     this.stompClient = new Client({
-      webSocketFactory: () => new SockJS('http://localhost:8080/ws/chat'),
+      webSocketFactory: () => new (SockJS as any)('http://localhost:8082/ws/chat'),
       connectHeaders: {
         username: currentUser.username
       },

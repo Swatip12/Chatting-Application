@@ -1,87 +1,237 @@
+/* Enhanced group list container */
 .group-list-container {
   height: 100%;
   display: flex;
   flex-direction: column;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+  backdrop-filter: blur(10px);
 }
 
 .group-list-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1rem;
-  border-bottom: 1px solid #dee2e6;
-  background-color: #f8f9fa;
+  padding: 1.5rem;
+  border-bottom: 1px solid rgba(102, 126, 234, 0.1);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.1) 100%);
+  backdrop-filter: blur(15px);
+  box-shadow: 0 2px 20px rgba(0, 0, 0, 0.05);
+}
+
+.group-list-header h6 {
+  color: #2d3748;
+  font-weight: 700;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.group-list-header h6 i {
+  color: #667eea;
+  font-size: 1.1rem;
 }
 
 .header-actions {
   display: flex;
-  gap: 0.5rem;
+  gap: 0.75rem;
+}
+
+.header-actions .btn {
+  border-radius: 12px;
+  padding: 0.5rem 1rem;
+  font-weight: 600;
+  font-size: 0.85rem;
+  border: 2px solid rgba(102, 126, 234, 0.2);
+  background: rgba(255, 255, 255, 0.1);
+  color: #667eea;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+}
+
+.header-actions .btn:hover {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.3);
 }
 
 .search-container {
-  padding: 0.5rem 1rem;
-  border-bottom: 1px solid #dee2e6;
-  background-color: #f8f9fa;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid rgba(102, 126, 234, 0.1);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+  backdrop-filter: blur(10px);
+}
+
+.search-container .form-control {
+  border-radius: 25px;
+  border: 2px solid rgba(102, 126, 234, 0.2);
+  background: rgba(255, 255, 255, 0.8);
+  padding: 0.75rem 1.25rem;
+  transition: all 0.3s ease;
+}
+
+.search-container .form-control:focus {
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  background: rgba(255, 255, 255, 1);
 }
 
 .groups-list {
   flex: 1;
   overflow-y: auto;
+  padding: 1rem 0;
 }
 
 .group-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1rem;
-  border-bottom: 1px solid #dee2e6;
+  padding: 1.25rem 1.5rem;
+  margin: 0.5rem 1rem;
+  border-radius: 15px;
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   cursor: pointer;
-  transition: background-color 0.2s ease;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.group-item::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(72, 187, 120, 0.1) 0%, rgba(56, 178, 172, 0.1) 100%);
+  border-radius: 15px;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.group-item:hover::before {
+  opacity: 1;
 }
 
 .group-item:hover {
-  background-color: #f8f9fa;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(72, 187, 120, 0.15);
+  border-color: rgba(72, 187, 120, 0.3);
 }
 
 .group-item:last-child {
   border-bottom: none;
 }
 
+/* Enhanced group info styling */
 .group-info {
   flex: 1;
 }
 
 .group-name {
+  font-weight: 700;
+  color: #2d3748;
+  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 1rem;
+}
+
+.group-name i {
+  color: #48bb78;
+  font-size: 1.1rem;
+}
+
+.creator-badge {
+  background: linear-gradient(135deg, #f6ad55, #ed8936);
+  color: white;
+  font-size: 0.7rem;
+  padding: 0.2rem 0.6rem;
+  border-radius: 12px;
   font-weight: 600;
-  color: #333;
-  margin-bottom: 0.25rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: 0 2px 8px rgba(246, 173, 85, 0.3);
+}
+
+.group-details {
+  margin-bottom: 0.5rem;
+}
+
+.group-details small {
+  color: #a0aec0;
+  font-weight: 500;
   display: flex;
   align-items: center;
   gap: 0.5rem;
 }
 
-.creator-badge {
-  color: #ffc107;
+.group-details small i {
+  color: #667eea;
   font-size: 0.8rem;
-}
-
-.group-details {
-  margin-bottom: 0.25rem;
 }
 
 .group-description {
   font-style: italic;
+  color: #718096;
+  font-size: 0.9rem;
+  margin-top: 0.25rem;
 }
 
 .group-actions {
-  margin-left: 1rem;
+  margin-left: 1.5rem;
+  display: flex;
+  gap: 0.5rem;
+}
+
+.group-actions .btn {
+  border-radius: 10px;
+  padding: 0.4rem 0.8rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  border: 2px solid rgba(72, 187, 120, 0.2);
+  background: rgba(255, 255, 255, 0.1);
+  color: #48bb78;
+  transition: all 0.3s ease;
+}
+
+.group-actions .btn:hover {
+  background: linear-gradient(135deg, #48bb78, #38b2ac);
+  color: white;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 15px rgba(72, 187, 120, 0.3);
 }
 
 .empty-state {
   flex: 1;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
+  padding: 3rem 2rem;
+  text-align: center;
+}
+
+.empty-state i {
+  font-size: 3rem;
+  color: #48bb78;
+  margin-bottom: 1rem;
+  opacity: 0.7;
+}
+
+.empty-state h6 {
+  color: #4a5568;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.empty-state p {
+  color: #a0aec0;
+  font-size: 0.9rem;
 }
 
 .btn-sm {

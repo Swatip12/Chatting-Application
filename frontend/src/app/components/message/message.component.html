@@ -18,17 +18,17 @@
     <div *ngIf="(isGroupChat || !isSentByCurrentUser) && !isSystemMessage" class="message-sender">
       {{ message.sender.username }}
     </div>
-    
+
     <!-- Message content -->
     <div class="message-content">
       {{ message.content }}
     </div>
-    
+
     <!-- Message timestamp -->
     <div class="message-time">
       {{ formattedTime }}
     </div>
-    
+
     <!-- Message status indicator for sent messages -->
     <div *ngIf="isSentByCurrentUser" class="message-status">
       <i class="fas fa-check" title="Sent"></i>

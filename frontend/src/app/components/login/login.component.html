@@ -2,58 +2,85 @@
   <div class="row w-100">
     <div class="col-md-6 col-lg-4 mx-auto">
       <div class="card shadow">
-        <div class="card-body p-4">
-          <h2 class="card-title text-center mb-4">Login to Chat</h2>
+        <div class="card-body">
+          <div class="text-center mb-4">
+            <div class="mb-3">
+              <i class="fas fa-comments fa-3x text-primary" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;"></i>
+            </div>
+            <h2 class="card-title">Welcome Back!</h2>
+            <p class="text-muted">Sign in to continue chatting</p>
+          </div>
           
           <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
-            <div class="mb-3">
-              <label for="username" class="form-label">Username</label>
-              <input 
-                type="text" 
-                class="form-control" 
-                id="username" 
-                formControlName="username"
-                [class.is-invalid]="loginForm.get('username')?.invalid && loginForm.get('username')?.touched"
-                placeholder="Enter your username">
+            <div class="mb-4">
+              <label for="username" class="form-label">
+                <i class="fas fa-user me-2"></i>Username
+              </label>
+              <div class="position-relative">
+                <input 
+                  type="text" 
+                  class="form-control" 
+                  id="username" 
+                  formControlName="username"
+                  [class.is-invalid]="loginForm.get('username')?.invalid && loginForm.get('username')?.touched"
+                  placeholder="Enter your username">
+                <i class="fas fa-user position-absolute" style="right: 15px; top: 50%; transform: translateY(-50%); color: #a0aec0;"></i>
+              </div>
               <div class="invalid-feedback" *ngIf="loginForm.get('username')?.invalid && loginForm.get('username')?.touched">
-                <div *ngIf="loginForm.get('username')?.errors?.['required']">Username is required</div>
-                <div *ngIf="loginForm.get('username')?.errors?.['minlength']">Username must be at least 3 characters</div>
+                <div *ngIf="loginForm.get('username')?.errors?.['required']">
+                  <i class="fas fa-exclamation-circle me-1"></i>Username is required
+                </div>
+                <div *ngIf="loginForm.get('username')?.errors?.['minlength']">
+                  <i class="fas fa-exclamation-circle me-1"></i>Username must be at least 3 characters
+                </div>
               </div>
             </div>
 
-            <div class="mb-3">
-              <label for="password" class="form-label">Password</label>
-              <input 
-                type="password" 
-                class="form-control" 
-                id="password" 
-                formControlName="password"
-                [class.is-invalid]="loginForm.get('password')?.invalid && loginForm.get('password')?.touched"
-                placeholder="Enter your password">
+            <div class="mb-4">
+              <label for="password" class="form-label">
+                <i class="fas fa-lock me-2"></i>Password
+              </label>
+              <div class="position-relative">
+                <input 
+                  type="password" 
+                  class="form-control" 
+                  id="password" 
+                  formControlName="password"
+                  [class.is-invalid]="loginForm.get('password')?.invalid && loginForm.get('password')?.touched"
+                  placeholder="Enter your password">
+                <i class="fas fa-lock position-absolute" style="right: 15px; top: 50%; transform: translateY(-50%); color: #a0aec0;"></i>
+              </div>
               <div class="invalid-feedback" *ngIf="loginForm.get('password')?.invalid && loginForm.get('password')?.touched">
-                <div *ngIf="loginForm.get('password')?.errors?.['required']">Password is required</div>
-                <div *ngIf="loginForm.get('password')?.errors?.['minlength']">Password must be at least 6 characters</div>
+                <div *ngIf="loginForm.get('password')?.errors?.['required']">
+                  <i class="fas fa-exclamation-circle me-1"></i>Password is required
+                </div>
+                <div *ngIf="loginForm.get('password')?.errors?.['minlength']">
+                  <i class="fas fa-exclamation-circle me-1"></i>Password must be at least 6 characters
+                </div>
               </div>
             </div>
 
             <div class="alert alert-danger" *ngIf="errorMessage" role="alert">
-              {{ errorMessage }}
+              <i class="fas fa-exclamation-triangle me-2"></i>{{ errorMessage }}
             </div>
 
-            <div class="d-grid gap-2">
+            <div class="d-grid gap-2 mb-4">
               <button 
                 type="submit" 
                 class="btn btn-primary" 
                 [disabled]="loginForm.invalid || loading">
                 <span *ngIf="loading" class="spinner-border spinner-border-sm me-2" role="status"></span>
-                {{ loading ? 'Logging in...' : 'Login' }}
+                <i *ngIf="!loading" class="fas fa-sign-in-alt me-2"></i>
+                {{ loading ? 'Signing in...' : 'Sign In' }}
               </button>
             </div>
           </form>
 
-          <div class="text-center mt-3">
-            <p class="mb-0">Don't have an account? 
-              <a href="#" (click)="navigateToRegister()" class="text-decoration-none">Register here</a>
+          <div class="text-center">
+            <p class="mb-0 text-muted">New to our platform? 
+              <a href="#" (click)="navigateToRegister(); $event.preventDefault()" class="text-decoration-none">
+                <i class="fas fa-user-plus me-1"></i>Create an account
+              </a>
             </p>
           </div>
         </div>
